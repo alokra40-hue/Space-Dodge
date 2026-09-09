@@ -1,70 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="description" content="Play Space Dodge — dodge falling blocks, collect power-ups, and beat your best score.">
-<meta name="theme-color" content="#070b1d">
-<title>Space Dodge — Free Browser Game</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="settings.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Space Dodge — a fast, free browser survival game.">
+  <meta name="theme-color" content="#070b1d">
+  <title>Space Dodge</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<main class="app-shell">
-  <section id="homeScreen" class="screen home-screen">
-    <div class="topbar"><span class="status"><i></i> ONLINE</span><button id="homeSoundBtn" class="icon-btn" type="button">🔊</button></div>
-    <div class="hero">
-      <div class="planet">◉</div>
-      <p class="eyebrow">WELCOME PILOT</p>
-      <h1>SPACE <span>DODGE</span></h1>
-      <p class="tagline">Dodge. Survive. Conquer.</p>
-      <div class="best-card"><span>🏆 YOUR BEST</span><b id="homeBestScore">0</b></div>
-      <button id="playBtn" class="play-btn" type="button">▶ PLAY GAME</button>
-    </div>
-    <div class="menu-grid">
-      <button class="menu-card" data-screen="howScreen"><strong>🎮</strong><span>How to Play</span><small>Learn the controls</small></button>
-      <button class="menu-card" data-screen="leaderboardScreen"><strong>🏆</strong><span>Leaderboard</span><small>Coming Soon</small></button>
-      <button class="menu-card" data-screen="skinsScreen"><strong>🚀</strong><span>Skins</span><small>Coming Soon</small></button>
-      <button class="menu-card" data-screen="missionsScreen"><strong>🎯</strong><span>Missions</span><small>Coming Soon</small></button>
-      <button class="menu-card settings-card" data-screen="settingsScreen"><strong>⚙️</strong><span>Settings</span><small>Sound & display</small></button>
-    </div>
-    <div class="legal-links"><a href="privacy.html">Privacy Policy</a><span>•</span><a href="terms.html">Terms &amp; Conditions</a></div>
-    <p class="version">SPACE DODGE • v1.0</p>
-  </section>
+  <main class="app-shell">
+    <section id="homeScreen" class="screen home-screen">
+      <div class="topbar"><span class="status"><i></i> ONLINE</span><button id="homeSoundBtn" class="icon-btn" type="button" aria-label="Toggle sound">🔊</button></div>
+      <div class="hero">
+        <div class="planet">◉</div><p class="eyebrow">WELCOME PILOT</p>
+        <h1>SPACE <span>DODGE</span></h1><p class="tagline">Dodge. Survive. Conquer.</p>
+        <div class="best-card"><span>🏆 YOUR BEST</span><b id="homeBestScore">0</b></div>
+        <button id="playBtn" class="play-btn" type="button">▶ PLAY GAME</button>
+      </div>
+      <div class="menu-grid">
+        <button class="menu-card" data-screen="howScreen" type="button"><strong>🎮</strong><span>How to Play</span><small>Learn the controls</small></button>
+        <button class="menu-card" data-screen="leaderboardScreen" type="button"><strong>🏆</strong><span>Leaderboard</span><small>Top pilots on this device</small></button>
+        <button class="menu-card" data-screen="skinsScreen" type="button"><strong>🚀</strong><span>Skins</span><small>Coming soon</small></button>
+        <button class="menu-card" data-screen="missionsScreen" type="button"><strong>🎯</strong><span>Missions</span><small>Coming soon</small></button>
+        <button class="menu-card settings-card" data-screen="settingsScreen" type="button"><strong>⚙️</strong><span>Settings</span><small>Sound & display</small></button>
+      </div>
+      <div class="legal-links"><a href="privacy.html">Privacy Policy</a><span>•</span><a href="terms.html">Terms &amp; Conditions</a></div>
+      <p class="version">SPACE DODGE • v1.1</p>
+    </section>
 
-  <section id="howScreen" class="screen info-screen hidden">
-    <button class="back-btn" data-screen="homeScreen">← HOME</button>
-    <div class="info-panel"><div class="big-icon">🎮</div><h2>HOW TO PLAY</h2><p class="muted">Stay alive as long as possible and beat your best score.</p>
-      <div class="tip"><b>🕹️ MOVE</b><span>Arrow Keys / A D / mobile buttons</span></div>
-      <div class="tip"><b>🛡️ DODGE</b><span>Press Shift or the DODGE button when danger is close.</span></div>
-      <div class="tip"><b>⭐ POWER-UPS</b><span>Shield blocks a hit. Boost makes you faster.</span></div>
-      <div class="tip"><b>❤️ LIVES</b><span>You start with 3 lives. Don't let the falling blocks catch you.</span></div>
-    </div>
-  </section>
+    <section id="howScreen" class="screen info-screen hidden">
+      <button class="back-btn" data-screen="homeScreen" type="button">← HOME</button>
+      <div class="info-panel"><div class="big-icon">🎮</div><h2>HOW TO PLAY</h2><p class="muted">Stay alive, dodge asteroids, and beat your best score.</p>
+        <div class="tip"><b>🕹️ MOVE</b><span>Arrow keys, A / D, or on-screen controls</span></div>
+        <div class="tip"><b>🛡️ DODGE</b><span>Shift or DODGE gives a short escape burst</span></div>
+        <div class="tip"><b>⭐ POWER-UPS</b><span>Shield blocks a hit; boost increases speed</span></div>
+        <div class="tip"><b>❤️ LIVES</b><span>You have three lives per run</span></div>
+      </div>
+    </section>
 
-  <section id="leaderboardScreen" class="screen info-screen hidden"><button class="back-btn" data-screen="homeScreen">← HOME</button><div class="info-panel"><div class="big-icon">🏆</div><h2>LEADERBOARD</h2><p class="muted">Global player rankings are coming in the next phase.</p><div class="coming">COMING SOON</div><p class="small-note">A real online leaderboard needs a shared database so scores can be seen by everyone.</p></div></section>
-  <section id="skinsScreen" class="screen info-screen hidden"><button class="back-btn" data-screen="homeScreen">← HOME</button><div class="info-panel"><div class="big-icon">🚀</div><h2>SHIP SKINS</h2><p class="muted">New ships and unlockable designs are coming soon.</p><div class="coming">COMING SOON</div></div></section>
-  <section id="missionsScreen" class="screen info-screen hidden"><button class="back-btn" data-screen="homeScreen">← HOME</button><div class="info-panel"><div class="big-icon">🎯</div><h2>MISSIONS</h2><p class="muted">Daily and achievement missions are coming soon.</p><div class="coming">COMING SOON</div></div></section>
+    <section id="leaderboardScreen" class="screen info-screen hidden">
+      <button class="back-btn" data-screen="homeScreen" type="button">← HOME</button>
+      <div class="info-panel leaderboard-panel">
+        <div class="big-icon">🏆</div><h2>LEADERBOARD</h2><p class="muted">Top 10 scores saved on this device.</p>
+        <label class="name-field" for="playerNameInput"><span>PILOT NAME</span><input id="playerNameInput" maxlength="14" autocomplete="nickname" placeholder="Pilot"><button id="saveNameBtn" type="button">SAVE</button></label>
+        <p id="leaderboardNote" class="small-note">Your next qualifying run will appear here.</p>
+        <ol id="leaderboardList" class="leaderboard-list" aria-label="Local top ten scores"></ol>
+        <p class="small-note">Global rankings need an online database. We can add Firebase or Supabase later.</p>
+      </div>
+    </section>
 
-  <section id="settingsScreen" class="screen info-screen hidden">
-    <button class="back-btn" data-screen="homeScreen" type="button">← HOME</button>
-    <div class="info-panel settings-panel">
-      <div class="big-icon">⚙️</div><h2>SETTINGS</h2><p class="muted">Tune your flight deck before you launch.</p>
-      <div class="setting-row"><div><b>Sound effects</b><span>Game beeps and alerts</span></div><button id="settingsSoundBtn" class="setting-toggle" type="button" aria-pressed="true">ON</button></div>
-      <div class="setting-row"><div><b>Full screen</b><span>More room to dodge on supported devices</span></div><button id="fullscreenBtn" class="setting-toggle" type="button">OPEN</button></div>
-      <p class="small-note">Your best score is saved only on this device.</p>
-    </div>
-  </section>
+    <section id="skinsScreen" class="screen info-screen hidden"><button class="back-btn" data-screen="homeScreen" type="button">← HOME</button><div class="info-panel"><div class="big-icon">🚀</div><h2>SHIP SKINS</h2><p class="muted">Unlockable ships will arrive with the coin system.</p><div class="coming">COMING SOON</div></div></section>
+    <section id="missionsScreen" class="screen info-screen hidden"><button class="back-btn" data-screen="homeScreen" type="button">← HOME</button><div class="info-panel"><div class="big-icon">🎯</div><h2>MISSIONS</h2><p class="muted">Daily and achievement missions are planned for a later update.</p><div class="coming">COMING SOON</div></div></section>
 
-  <section id="gameScreen" class="screen game-screen hidden">
-    <header class="game-header"><div><h2>SPACE DODGE</h2><p class="controls">Move: Arrow / A D • Dodge: Shift</p></div><div class="header-actions"><button id="homeBtn" class="small-btn" type="button">⌂ HOME</button><button id="soundToggle" class="small-btn" type="button">🔊 Sound</button></div></header>
-    <div class="game-container"><canvas id="gameCanvas" width="480" height="640"></canvas><div class="hud"><span>Score <b id="scoreValue">0</b></span><span>Best <b id="highScoreValue">0</b></span><span>Lives <b id="livesValue">❤️❤️❤️</b></span><span id="cooldownHud">Dodge: READY</span></div></div>
-    <div class="mobile-controls" aria-label="Game controls"><button id="leftBtn" class="control-btn" type="button">◀</button><button id="dodgeBtn" class="control-btn dodge-btn" type="button">DODGE</button><button id="rightBtn" class="control-btn" type="button">▶</button></div>
-    <div class="bottom-actions"><button id="startBtn" class="action-btn" type="button">START GAME</button><button id="pauseBtn" class="action-btn secondary" type="button">PAUSE</button></div>
-    <p class="powerup-help">⭐ Shield • ⚡ Boost • 🛡️ Dodge</p>
-  </section>
-</main>
-<script src="game.js"></script>
-<script src="settings.js"></script>
+    <section id="settingsScreen" class="screen info-screen hidden">
+      <button class="back-btn" data-screen="homeScreen" type="button">← HOME</button>
+      <div class="info-panel settings-panel"><div class="big-icon">⚙️</div><h2>SETTINGS</h2><p class="muted">Tune your flight deck before launch.</p>
+        <div class="setting-row"><div><b>Sound effects</b><span>Game beeps and alerts</span></div><button id="settingsSoundBtn" class="setting-toggle" type="button" aria-pressed="true">ON</button></div>
+        <div class="setting-row"><div><b>Full screen</b><span>More room to dodge on supported devices</span></div><button id="fullscreenBtn" class="setting-toggle" type="button">OPEN</button></div>
+        <p class="small-note">Scores, pilot name, and settings are stored only in this browser.</p>
+      </div>
+    </section>
+
+    <section id="gameScreen" class="screen game-screen hidden">
+      <header class="game-header"><div><h2>SPACE DODGE</h2><p class="controls">Move: Arrow / A D • Dodge: Shift</p></div><div class="header-actions"><button id="homeBtn" class="small-btn" type="button">⌂ HOME</button><button id="soundToggle" class="small-btn" type="button">🔊 Sound</button></div></header>
+      <div class="game-container"><canvas id="gameCanvas" width="480" height="640">Your browser does not support canvas.</canvas><div class="hud"><span>Score <b id="scoreValue">0</b></span><span>Best <b id="highScoreValue">0</b></span><span>Lives <b id="livesValue">❤️❤️❤️</b></span><span id="cooldownHud">Dodge: READY</span></div></div>
+      <div class="mobile-controls" aria-label="Game controls"><button id="leftBtn" class="control-btn" type="button">◀</button><button id="dodgeBtn" class="control-btn dodge-btn" type="button">DODGE</button><button id="rightBtn" class="control-btn" type="button">▶</button></div>
+      <div class="bottom-actions"><button id="startBtn" class="action-btn" type="button">START GAME</button><button id="pauseBtn" class="action-btn secondary" type="button">PAUSE</button></div><p class="powerup-help">⭐ Shield • ⚡ Boost • 🛡️ Dodge</p>
+    </section>
+  </main>
+  <script src="game.js"></script>
 </body>
 </html>
