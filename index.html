@@ -3,18 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Space Dodge</title>
+  <meta name="description" content="Play Space Dodge — dodge falling blocks, collect power-ups, and beat your best score. Free browser game.">
+  <meta name="theme-color" content="#0b1230">
+  <meta property="og:title" content="Space Dodge — Free Browser Game">
+  <meta property="og:description" content="Dodge, survive, and beat your best score in Space Dodge.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <title>Space Dodge — Free Browser Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="game-shell">
     <header class="game-header">
       <div>
-        <div class="title-row"><span class="status-dot"></span><h1>Space Dodge</h1></div>
-        <p class="tagline">Dodge. Survive. Beat your best.</p>
+        <h1>Space Dodge</h1>
         <p class="controls">Move: Arrow Keys / A D • Dodge: Shift / Button • Start: Space</p>
       </div>
-      <div class="header-actions"><button id="shareBtn" class="small-btn" type="button">↗ Share</button><button id="soundToggle" class="small-btn" type="button">🔊 Sound</button></div>
+      <div class="header-actions">
+        <button id="shareBtn" class="small-btn" type="button">↗ Share</button>
+        <button id="soundToggle" class="small-btn" type="button">🔊 Sound</button>
+      </div>
     </header>
 
     <div class="game-container">
@@ -38,12 +46,13 @@
       <button id="pauseBtn" class="action-btn secondary" type="button">PAUSE</button>
     </div>
 
-    <div class="tip-grid">
-      <div>⭐ <b>Shield</b><span>Absorbs a hit</span></div>
-      <div>⚡ <b>Boost</b><span>Moves faster</span></div>
-      <div>🛡️ <b>Dodge</b><span>Invincible briefly</span></div>
+    <div class="powerup-cards" aria-label="Power-up guide">
+      <div class="info-card"><span>⭐</span><div><b>Shield</b><small>Blocks one hit</small></div></div>
+      <div class="info-card"><span>⚡</span><div><b>Boost</b><small>Move faster</small></div></div>
+      <div class="info-card"><span>🛡️</span><div><b>Dodge</b><small>Brief invincibility</small></div></div>
     </div>
     <p id="shareStatus" class="share-status" aria-live="polite"></p>
+    <p class="powerup-help">Free browser game • Play, share your score, and beat your best.</p>
   </main>
 
   <script src="game.js"></script>
