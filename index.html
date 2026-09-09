@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Space Dodge</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="game-header">
+      <div>
+        <h1>Space Dodge</h1>
+        <p class="controls">Move: Arrow Keys / A D • Dodge: Shift / Button • Start: Space</p>
+      </div>
+      <button id="soundToggle" class="small-btn" type="button">🔊 Sound</button>
+    </header>
+
+    <div class="game-container">
+      <canvas id="gameCanvas" width="480" height="640"></canvas>
+      <div class="hud">
+        <span>Score <b id="scoreValue">0</b></span>
+        <span>Best <b id="highScoreValue">0</b></span>
+        <span>Lives <b id="livesValue">❤️❤️❤️</b></span>
+        <span id="cooldownHud">Dodge: READY</span>
+      </div>
+    </div>
+
+    <div class="mobile-controls" aria-label="Game controls">
+      <button id="leftBtn" class="control-btn" type="button">◀</button>
+      <button id="dodgeBtn" class="control-btn dodge-btn" type="button">DODGE</button>
+      <button id="rightBtn" class="control-btn" type="button">▶</button>
+    </div>
+
+    <div class="bottom-actions">
+      <button id="startBtn" class="action-btn" type="button">START GAME</button>
+      <button id="pauseBtn" class="action-btn secondary" type="button">PAUSE</button>
+    </div>
+
+    <p class="powerup-help">⭐ Shield protects you • ⚡ Boost gives a short speed burst • 🛡️ Dodge gives temporary invincibility</p>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
