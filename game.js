@@ -9,6 +9,8 @@ const cooldownHud = document.getElementById("cooldownHud");
 const startBtn = document.getElementById("startBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const soundToggle = document.getElementById("soundToggle");
+const shareBtn = document.getElementById("shareBtn");
+const shareStatus = document.getElementById("shareStatus");
 
 const keys = { left: false, right: false };
 let gameState = "ready";
@@ -238,6 +240,16 @@ canvas.addEventListener("click",()=>{ if(gameState === "ready" || gameState === 
 startBtn.addEventListener("click",()=>{ ensureAudio(); startGame(); });
 pauseBtn.addEventListener("click",()=>{ ensureAudio(); if(gameState === "ready" || gameState === "gameover") return; togglePause(); });
 soundToggle.addEventListener("click",()=>{ soundOn=!soundOn; soundToggle.textContent=soundOn ? "🔊 Sound" : "🔇 Muted"; if(soundOn) { ensureAudio(); beep(600,.06,"sine"); } });
+shareBtn.addEventListener("click", async () => {
+  const shareData = { title: "Space Dodge", text: "Can you beat my Space Dodge score?", url: window.location.href };
+  try {
+    if (navigator.share) { await navigator.share(shareData); }
+    else if (navigator.clipboard) { await navigator.clipboard.writeText(window.location.href); shareStatus.textContent = "Game link copied!"; setTimeout(() => shareStatus.textContent = "", 2200); }
+    else { shareStatus.textContent = window.location.href; }
+  } catch (err) {
+    if (err && err.name !== "AbortError") shareStatus.textContent = "Share cancelled.";
+  }
+});
 document.addEventListener("keydown",handleKeyDown); document.addEventListener("keyup",handleKeyUp); window.addEventListener("blur",()=>{keys.left=false;keys.right=false;});
 
 draw(); updateHud();

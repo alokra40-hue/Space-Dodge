@@ -10,10 +10,11 @@
   <main class="game-shell">
     <header class="game-header">
       <div>
-        <h1>Space Dodge</h1>
+        <div class="title-row"><span class="status-dot"></span><h1>Space Dodge</h1></div>
+        <p class="tagline">Dodge. Survive. Beat your best.</p>
         <p class="controls">Move: Arrow Keys / A D • Dodge: Shift / Button • Start: Space</p>
       </div>
-      <button id="soundToggle" class="small-btn" type="button">🔊 Sound</button>
+      <div class="header-actions"><button id="shareBtn" class="small-btn" type="button">↗ Share</button><button id="soundToggle" class="small-btn" type="button">🔊 Sound</button></div>
     </header>
 
     <div class="game-container">
@@ -37,7 +38,12 @@
       <button id="pauseBtn" class="action-btn secondary" type="button">PAUSE</button>
     </div>
 
-    <p class="powerup-help">⭐ Shield protects you • ⚡ Boost gives a short speed burst • 🛡️ Dodge gives temporary invincibility</p>
+    <div class="tip-grid">
+      <div>⭐ <b>Shield</b><span>Absorbs a hit</span></div>
+      <div>⚡ <b>Boost</b><span>Moves faster</span></div>
+      <div>🛡️ <b>Dodge</b><span>Invincible briefly</span></div>
+    </div>
+    <p id="shareStatus" class="share-status" aria-live="polite"></p>
   </main>
 
   <script src="game.js"></script>

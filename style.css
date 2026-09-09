@@ -13,7 +13,11 @@ body {
 }
 
 .game-shell { width: min(94vw, 560px); text-align: center; }
-.game-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.game-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.header-actions { display: flex; gap: 7px; }
+.title-row { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.status-dot { width: 9px; height: 9px; border-radius: 50%; background: #62f5a5; box-shadow: 0 0 12px rgba(98,245,165,.8); }
+.tagline { margin: 0 0 4px; color: #d8e4ff; font-size: 13px; }
 .game-header > div { flex: 1; }
 h1 { margin: 0 0 5px; color: #77e8ff; font-size: clamp(28px, 7vw, 38px); letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 18px rgba(119,232,255,.7); }
 .controls { margin: 0; color: #aeb8d7; font-size: 12px; }
@@ -34,13 +38,22 @@ canvas { display: block; width: 100%; height: auto; border-radius: 10px; backgro
 .bottom-actions { display: flex; gap: 10px; margin-top: 10px; }
 .action-btn { flex: 1; min-height: 44px; font-size: 14px; background: linear-gradient(180deg, #147da1, #0c4d72); border-color: #4adfff; }
 .action-btn.secondary { background: rgba(26,39,76,.9); border-color: #53699f; }
-.powerup-help { color: #8e9cc1; font-size: 11px; line-height: 1.5; margin: 10px 0 0; }
+.tip-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
+.tip-grid div { padding: 8px 6px; border: 1px solid rgba(119,232,255,.14); border-radius: 10px; background: rgba(13,24,52,.55); color: #dfe8ff; font-size: 11px; }
+.tip-grid b { display: block; margin-top: 3px; color: #77e8ff; font-size: 12px; }
+.tip-grid span { display: block; margin-top: 2px; color: #8e9cc1; }
+.share-status { min-height: 15px; color: #76f0b0; font-size: 11px; margin: 5px 0 0; }
 
 @media (max-width: 430px) {
   body { padding: 8px; }
   .game-header { align-items: flex-start; }
   .small-btn { padding: 7px 9px; font-size: 11px; }
   .controls { font-size: 10px; }
+    .tagline { font-size: 11px; }
+    .header-actions { gap: 5px; }
+    .tip-grid { gap: 5px; }
+    .tip-grid div { padding: 7px 4px; font-size: 10px; }
+    .tip-grid b { font-size: 11px; }
   .game-container { padding: 6px; }
   .hud { left: 11px; right: 11px; top: 11px; font-size: 10px; }
   .hud span { padding: 4px 5px; }
