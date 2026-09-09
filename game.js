@@ -18,15 +18,35 @@ const LEADERBOARD_KEY = "spaceDodgeLeaderboard";
 const PLAYER_NAME_KEY = "spaceDodgePlayerName";
 const SOUND_KEY = "spaceDodgeSound";
 const COINS_KEY = "spaceDodgeCoins";
+const SKINS_KEY = "spaceDodgeUnlockedSkins";
+const SELECTED_SKIN_KEY = "spaceDodgeSelectedSkin";
+const SKINS = {
+  sky: { name: "Sky Runner", cost: 0, body: "#1d9ac5", cockpit: "#d9fbff", wing: "#0b4f78", flame: "#ff9257" },
+  rose: { name: "Nebula Rose", cost: 75, body: "#d73d7b", cockpit: "#ffe0ef", wing: "#721d52", flame: "#a98bff" },
+  gold: { name: "Solar Strike", cost: 200, body: "#d89a20", cockpit: "#fff4c3", wing: "#784510", flame: "#ffef72" },
+  phantom: { name: "Void Phantom", cost: 325, body: "#7655c9", cockpit: "#ece3ff", wing: "#31205f", flame: "#bb9cff" },
+  toxic: { name: "Toxic Nova", cost: 500, body: "#51be4a", cockpit: "#e4ffd0", wing: "#1d6127", flame: "#aaff54" },
+  arctic: { name: "Arctic Pulse", cost: 750, body: "#74cce8", cockpit: "#f2ffff", wing: "#276b91", flame: "#e7ffff" },
+  violet: { name: "Violet Viper", cost: 1000, body: "#a248c8", cockpit: "#ffe5ff", wing: "#54156c", flame: "#e29aff" },
+  crimson: { name: "Crimson Comet", cost: 1500, body: "#dc383d", cockpit: "#ffe1df", wing: "#76131b", flame: "#ff9b47" }
+};
 const keys = { left: false, right: false };
 let gameState = "ready", lastTime = 0, spawnTimer = 0, powerupTimer = 5, coinTimer = 1.2, elapsedTime = 0;
 let score = 0, runCoins = 0, totalCoins = Math.max(0, Number(localStorage.getItem(COINS_KEY) || 0) || 0), lives = 3, highScore = Number(localStorage.getItem("spaceDodgeHighScore") || 0);
 let dodgeCooldown = 0, dodgeTime = 0, invulnerable = 0, shieldTime = 0, boostTime = 0, shakeTime = 0;
 let soundOn = localStorage.getItem(SOUND_KEY) !== "off", audioCtx = null, enemies = [], powerups = [], coins = [], particles = [], scoreRecorded = false;
+let unlockedSkins = getUnlockedSkins();
+let selectedSkin = unlockedSkins.includes(localStorage.getItem(SELECTED_SKIN_KEY)) ? localStorage.getItem(SELECTED_SKIN_KEY) : "sky";
 let player = createPlayer();
 const stars = Array.from({ length: 90 }, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: 1 + Math.random() * 2, speed: 18 + Math.random() * 45 }));
 
 function createPlayer() { return { x: canvas.width / 2 - 22, y: canvas.height - 78, width: 44, height: 34, speed: 320, tilt: 0 }; }
+function getUnlockedSkins() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SKINS_KEY) || "[\"sky\"]");
+    return [...new Set(["sky", ...(Array.isArray(saved) ? saved.filter(id => Object.hasOwn(SKINS, id)) : [])])];
+  } catch (_) { return ["sky"]; }
+}
 function cleanName(value) { return (value || "Pilot").replace(/[^a-z0-9 _-]/gi, "").trim().slice(0, 14) || "Pilot"; }
 function getName() { return cleanName(localStorage.getItem(PLAYER_NAME_KEY)); }
 function getLeaderboard() {
@@ -62,6 +82,7 @@ function showScreen(id) {
   if (id === "homeScreen") document.getElementById("homeBestScore").textContent = highScore;
   if (id === "leaderboardScreen") renderLeaderboard();
   if (id === "settingsScreen") syncSoundButtons();
+  if (id === "skinsScreen") { syncCoinUi(); syncSkins(); }
 }
 function syncSoundButtons() {
   document.getElementById("homeSoundBtn").textContent = soundOn ? "🔊" : "🔇";
@@ -71,6 +92,23 @@ function syncSoundButtons() {
 function syncCoinUi() {
   document.getElementById("homeCoins").textContent = totalCoins;
   document.getElementById("skinsCoinBalance").textContent = totalCoins;
+}
+function syncSkins() {
+  document.querySelectorAll("[data-skin]").forEach(card => {
+    const id = card.dataset.skin, skin = SKINS[id], unlocked = unlockedSkins.includes(id), selected = selectedSkin === id;
+    card.classList.toggle("locked", !unlocked); card.classList.toggle("selected", selected);
+    const status = card.querySelector("[data-skin-status]");
+    status.textContent = selected ? "EQUIPPED" : unlocked ? "OWNED • EQUIP" : `${skin.cost} COINS`;
+    card.setAttribute("aria-label", `${skin.name}: ${status.textContent}`);
+  });
+}
+function chooseSkin(id) {
+  const skin = SKINS[id]; if (!skin) return;
+  if (!unlockedSkins.includes(id)) {
+    if (totalCoins < skin.cost) { document.getElementById("skinsMessage").textContent = `Need ${skin.cost - totalCoins} more coins for ${skin.name}.`; beep(180, .1, "sawtooth"); return; }
+    totalCoins -= skin.cost; unlockedSkins.push(id); localStorage.setItem(COINS_KEY, totalCoins); localStorage.setItem(SKINS_KEY, JSON.stringify(unlockedSkins)); document.getElementById("skinsMessage").textContent = `${skin.name} unlocked! Equipped for your next run.`; beep(980, .11, "triangle");
+  } else { document.getElementById("skinsMessage").textContent = `${skin.name} equipped.`; beep(680, .06, "sine"); }
+  selectedSkin = id; localStorage.setItem(SELECTED_SKIN_KEY, selectedSkin); syncCoinUi(); syncSkins();
 }
 function setSound(enabled) { soundOn = enabled; localStorage.setItem(SOUND_KEY, enabled ? "on" : "off"); syncSoundButtons(); if (enabled) { ensureAudio(); beep(600, .06, "sine"); } }
 
@@ -129,7 +167,14 @@ function draw() {
   stars.forEach(star => { ctx.fillStyle = `rgba(210,235,255,${.35 + star.size / 3})`; ctx.fillRect(star.x, star.y, star.size, star.size * 1.7); }); drawCoins(); drawPowerups(); drawEnemies(); drawPlayer(); drawParticles(); ctx.restore();
   if (gameState === "ready") overlay("SPACE DODGE", "Press START or SPACE to play"); if (gameState === "paused") overlay("PAUSED", "Press PAUSE / Space to resume"); if (gameState === "gameover") overlay("GAME OVER", `Score: ${Math.floor(score)} • Best: ${highScore}`);
 }
-function drawPlayer() { ctx.save(); ctx.translate(player.x + player.width / 2, player.y + player.height / 2); ctx.rotate(player.tilt); ctx.translate(-player.width / 2, -player.height / 2); if (shieldTime || dodgeTime) { ctx.beginPath(); ctx.arc(player.width / 2, player.height / 2, 34 + Math.sin(elapsedTime * 8) * 2, 0, Math.PI * 2); ctx.strokeStyle = dodgeTime ? "#b796ff" : "#62e9ff"; ctx.lineWidth = 3; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 18; ctx.stroke(); } ctx.shadowColor = "#53e6ff"; ctx.shadowBlur = 18; ctx.fillStyle = "#1d9ac5"; ctx.beginPath(); ctx.moveTo(22, 0); ctx.lineTo(42, 30); ctx.lineTo(32, 28); ctx.lineTo(27, 34); ctx.lineTo(17, 34); ctx.lineTo(12, 28); ctx.lineTo(2, 30); ctx.closePath(); ctx.fill(); ctx.fillStyle = "#d9fbff"; ctx.beginPath(); ctx.moveTo(22, 5); ctx.lineTo(31, 23); ctx.lineTo(13, 23); ctx.closePath(); ctx.fill(); ctx.fillStyle = "#0b4f78"; ctx.fillRect(8, 23, 9, 8); ctx.fillRect(27, 23, 9, 8); ctx.fillStyle = boostTime ? "#ffe16b" : "#ff9257"; [[15, 19], [25, 29]].forEach(([left, right]) => { ctx.beginPath(); ctx.moveTo(left, 31); ctx.lineTo(right, 31); ctx.lineTo((left + right) / 2, 42 + Math.random() * 5); ctx.closePath(); ctx.fill(); }); ctx.restore(); }
+function drawPlayer() {
+  const skin = SKINS[selectedSkin] || SKINS.sky;
+  ctx.save(); ctx.translate(player.x + player.width / 2, player.y + player.height / 2); ctx.rotate(player.tilt); ctx.translate(-player.width / 2, -player.height / 2);
+  if (shieldTime || dodgeTime) { ctx.beginPath(); ctx.arc(player.width / 2, player.height / 2, 34 + Math.sin(elapsedTime * 8) * 2, 0, Math.PI * 2); ctx.strokeStyle = dodgeTime ? "#b796ff" : "#62e9ff"; ctx.lineWidth = 3; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 18; ctx.stroke(); }
+  ctx.shadowColor = skin.body; ctx.shadowBlur = 18; ctx.fillStyle = skin.body; ctx.beginPath(); ctx.moveTo(22, 0); ctx.lineTo(42, 30); ctx.lineTo(32, 28); ctx.lineTo(27, 34); ctx.lineTo(17, 34); ctx.lineTo(12, 28); ctx.lineTo(2, 30); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = skin.cockpit; ctx.beginPath(); ctx.moveTo(22, 5); ctx.lineTo(31, 23); ctx.lineTo(13, 23); ctx.closePath(); ctx.fill(); ctx.fillStyle = skin.wing; ctx.fillRect(8, 23, 9, 8); ctx.fillRect(27, 23, 9, 8); ctx.fillStyle = boostTime ? "#ffe16b" : skin.flame;
+  [[15, 19], [25, 29]].forEach(([left, right]) => { ctx.beginPath(); ctx.moveTo(left, 31); ctx.lineTo(right, 31); ctx.lineTo((left + right) / 2, 42 + Math.random() * 5); ctx.closePath(); ctx.fill(); }); ctx.restore();
+}
 function drawEnemies() { enemies.forEach(enemy => { ctx.save(); ctx.translate(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2); ctx.rotate(enemy.rotation); ctx.shadowColor = enemy.color; ctx.shadowBlur = 14; ctx.fillStyle = enemy.color; ctx.fillRect(-enemy.width / 2, -enemy.height / 2, enemy.width, enemy.height); ctx.fillStyle = "#351225"; ctx.fillRect(-enemy.width * .28, -enemy.height * .22, enemy.width * .18, enemy.height * .18); ctx.fillRect(enemy.width * .1, -enemy.height * .22, enemy.width * .18, enemy.height * .18); ctx.restore(); }); }
 function drawPowerups() { powerups.forEach(powerup => { ctx.save(); ctx.translate(powerup.x, powerup.y); const size = powerup.size + Math.sin(powerup.pulse) * 2; ctx.shadowColor = powerup.type === "shield" ? "#64e7ff" : "#ffe16b"; ctx.shadowBlur = 18; ctx.fillStyle = ctx.shadowColor; ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#102044"; ctx.font = "bold 17px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(powerup.type === "shield" ? "S" : "⚡", 0, 1); ctx.restore(); }); }
 function drawCoins() { coins.forEach(coin => { ctx.save(); ctx.translate(coin.x, coin.y); ctx.scale(.72 + Math.abs(Math.sin(coin.spin)) * .28, 1); ctx.shadowColor = "#ffe16b"; ctx.shadowBlur = 13; ctx.fillStyle = "#f6c941"; ctx.beginPath(); ctx.arc(0, 0, coin.size, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0; ctx.lineWidth = 2; ctx.strokeStyle = "#fff0a1"; ctx.stroke(); ctx.fillStyle = "#9d6410"; ctx.font = "bold 15px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("●", 0, 1); ctx.restore(); }); }
@@ -147,4 +192,5 @@ document.addEventListener("keydown", event => { const key = event.key.toLowerCas
 document.addEventListener("keyup", event => { const key = event.key.toLowerCase(); if (event.code === "ArrowLeft" || key === "a") keys.left = false; if (event.code === "ArrowRight" || key === "d") keys.right = false; });
 canvas.addEventListener("pointermove", event => { if (gameState !== "playing" || event.pointerType === "touch") return; const rect = canvas.getBoundingClientRect(), pointerX = (event.clientX - rect.left) * canvas.width / rect.width; player.x = Math.max(0, Math.min(canvas.width - player.width, pointerX - player.width / 2)); });
 canvas.addEventListener("click", () => { if (gameState === "ready" || gameState === "gameover") startGame(); }); startBtn.addEventListener("click", startGame); pauseBtn.addEventListener("click", () => { if (gameState !== "ready" && gameState !== "gameover") togglePause(); }); soundToggle.addEventListener("click", () => setSound(!soundOn)); document.getElementById("homeSoundBtn").addEventListener("click", () => setSound(!soundOn)); document.getElementById("settingsSoundBtn").addEventListener("click", () => setSound(!soundOn)); document.getElementById("fullscreenBtn").addEventListener("click", async () => { try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); } catch (_) {} }); document.addEventListener("fullscreenchange", () => document.getElementById("fullscreenBtn").textContent = document.fullscreenElement ? "EXIT" : "OPEN"); document.getElementById("homeBtn").addEventListener("click", () => { gameState = "ready"; keys.left = keys.right = false; showScreen("homeScreen"); }); document.getElementById("playBtn").addEventListener("click", startGame); document.getElementById("saveNameBtn").addEventListener("click", saveName); nameInput.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); saveName(); } }); document.querySelectorAll("[data-screen]").forEach(button => button.addEventListener("click", () => showScreen(button.dataset.screen))); window.addEventListener("blur", () => { keys.left = keys.right = false; if (gameState === "playing") togglePause(); });
-syncSoundButtons(); syncCoinUi(); renderLeaderboard(); showScreen("homeScreen"); updateHud(); draw();
+document.querySelectorAll("[data-skin]").forEach(card => card.addEventListener("click", () => chooseSkin(card.dataset.skin)));
+syncSoundButtons(); syncCoinUi(); syncSkins(); renderLeaderboard(); showScreen("homeScreen"); updateHud(); draw();

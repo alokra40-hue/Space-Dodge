@@ -1,0 +1,1 @@
+.phantom-ship{color:#b293ff}.toxic-ship{color:#8cff58}.arctic-ship{color:#d8faff}.violet-ship{color:#d68aff}.crimson-ship{color:#ff5151}.skins-grid{grid-template-columns:repeat(4,1fr)}.skin-card{min-height:132px}@media(max-width:430px){.skins-grid{grid-template-columns:repeat(3,1fr)}}
