@@ -109,15 +109,42 @@ function saveMissionState() { localStorage.setItem(MISSIONS_KEY, JSON.stringify(
 function resetMissionPeriodIfNeeded() { const today=dateKey(), week=weekKey(); if (missionState.dailyKey !== today) { missionState.dailyKey=today; DAILY_MISSIONS.forEach(m=>delete missionState.claimed[m.id]); } if (missionState.weeklyKey !== week) { missionState.weeklyKey=week; WEEKLY_MISSIONS.forEach(m=>delete missionState.claimed[m.id]); } saveMissionState(); }
 function missionProgress(m) { if (m.type === "survival") return Math.min(missionState.stats.bestSurvival, m.target); return Math.min(Number(missionState.stats[m.type] || 0), m.target); }
 function missionDone(m) { return missionProgress(m) >= m.target; }
+function hasUnclaimedCompletedMission() {
+  resetMissionPeriodIfNeeded();
+  return [...DAILY_MISSIONS, ...WEEKLY_MISSIONS, ...ACHIEVEMENTS].some(m => missionDone(m) && !missionState.claimed[m.id]);
+}
+function syncMissionBadge() {
+  const badge = document.getElementById("missionBadge");
+  if (badge) badge.classList.toggle("hidden", !hasUnclaimedCompletedMission());
+}
+function missionCompletionNotice() {
+  syncMissionBadge();
+  const completed = [...DAILY_MISSIONS, ...WEEKLY_MISSIONS, ...ACHIEVEMENTS].filter(m => missionDone(m) && !missionState.claimed[m.id]);
+  let seen = []; try { seen = JSON.parse(sessionStorage.getItem("spaceDodgeMissionNotices") || "[]"); } catch (_) {}
+  const fresh = completed.find(m => !seen.includes(m.id));
+  if (!fresh) return;
+  seen.push(fresh.id); sessionStorage.setItem("spaceDodgeMissionNotices", JSON.stringify(seen));
+  showMissionToast(`🎯 MISSION COMPLETE — ${fresh.name}`, `Reward: +${fresh.reward} 🪙`);
+}
+function showMissionToast(title, text) {
+  let toast = document.getElementById("missionToast");
+  if (!toast) {
+    toast = document.createElement("div"); toast.id = "missionToast"; toast.className = "mission-toast";
+    toast.innerHTML = "<b></b><span></span>"; document.body.append(toast);
+  }
+  toast.querySelector("b").textContent = title; toast.querySelector("span").textContent = text;
+  toast.classList.remove("show"); void toast.offsetWidth; toast.classList.add("show");
+  clearTimeout(window.missionToastTimer); window.missionToastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
+}
 function claimMission(id) { const all=[...DAILY_MISSIONS,...WEEKLY_MISSIONS,...ACHIEVEMENTS], m=all.find(x=>x.id===id); if(!m || !missionDone(m) || missionState.claimed[id]) return; missionState.claimed[id]=true; totalCoins += m.reward; localStorage.setItem(COINS_KEY,totalCoins); saveMissionState(); syncCoinUi(); renderMissions(); beep(1040,.12,"triangle"); }
-function updateMissionStat(type, amount=1) { missionState.stats[type]=(missionState.stats[type]||0)+amount; saveMissionState(); }
-function updateBestSurvival(seconds) { if(seconds>missionState.stats.bestSurvival){missionState.stats.bestSurvival=seconds;saveMissionState();} }
+function updateMissionStat(type, amount=1) { missionState.stats[type]=(missionState.stats[type]||0)+amount; saveMissionState(); missionCompletionNotice(); }
+function updateBestSurvival(seconds) { if(seconds>missionState.stats.bestSurvival){missionState.stats.bestSurvival=seconds;saveMissionState();missionCompletionNotice();} }
 function renderMissionList() { resetMissionPeriodIfNeeded(); const list=document.getElementById("missionList"), set=MISSION_SETS[activeMissionTab]; list.replaceChildren(); let done=0; set.forEach(m=>{ const p=missionProgress(m), claimed=!!missionState.claimed[m.id], complete=p>=m.target; if(complete) done++; const card=document.createElement("div"); card.className=`mission-card ${complete?"complete":""} ${claimed?"claimed":""}`; const pct=Math.min(100,(p/m.target)*100); card.innerHTML=`<div class="mission-main"><span class="mission-icon">${m.icon}</span><div class="mission-copy"><b>${m.name}</b><small>${m.desc}</small><div class="mission-progress"><i style="width:${pct}%"></i></div><span class="mission-numbers">${m.type==="survival"?Math.floor(p):Math.floor(p)} / ${m.target}</span></div><div class="mission-reward">+${m.reward} 🪙</div></div><div class="mission-action">${claimed?"✓ CLAIMED":complete?`<button class="claim-btn" data-claim-mission="${m.id}" type="button">CLAIM</button>`:`<span>${Math.floor(p)}/${m.target}</span>`}</div>`; list.append(card); }); if(activeMissionTab!=="achievements") document.getElementById(activeMissionTab+"Count").textContent=`${done}/${set.length}`; list.querySelectorAll("[data-claim-mission]").forEach(btn=>btn.addEventListener("click",()=>claimMission(btn.dataset.claimMission))); }
 function renderLoginReward() { const el=document.getElementById("loginDays"), badge=document.getElementById("loginDayBadge"), status=document.getElementById("loginRewardStatus"), msg=document.getElementById("loginRewardMessage"), btn=document.getElementById("claimLoginBtn"); if(!el)return; let st; try{st=JSON.parse(localStorage.getItem(LOGIN_KEY)||"null");}catch(_){st=null;} if(!st) st={started:false,day:0,lastDate:null,claimedDay:0,completed:false}; const rewards=[25,40,60,80,100,150,"SKIN"]; el.replaceChildren(); for(let i=1;i<=7;i++){const d=document.createElement("div"); const state=st.completed&&i===7?"done":i<st.day?"done":i===st.day?"today":"locked"; d.className=`login-day ${state}`; d.innerHTML=`<span>DAY ${i}</span><b>${i===7?"🚀":`+${rewards[i-1]} 🪙`}</b>`; el.append(d);} badge.textContent=st.completed?"COMPLETE":"DAY "+Math.max(1,st.day)+"/7"; status.textContent=st.completed?"7-day reward already completed.":`Day ${Math.max(1,st.day)} reward is ready.`; msg.textContent=st.completed?"One-time reward track complete • Aurora Legend unlocked.":"Miss one calendar day and the login streak resets to Day 1."; btn.disabled=st.completed||st.claimedDay!==st.day||st.day<1; btn.textContent=st.completed?"DONE":st.claimedDay===st.day?"CLAIM":"CLAIMED"; }
 function processLoginReward() { let st; try{st=JSON.parse(localStorage.getItem(LOGIN_KEY)||"null");}catch(_){st=null;} const today=dateKey(); if(!st){st={started:true,day:1,lastDate:today,claimedDay:0,completed:false};} else if(!st.completed && st.lastDate!==today){const gap=dayDiff(st.lastDate,today); if(gap===1){st.day=Math.min(7,st.day+1);} else if(gap>1){st.day=1;st.claimedDay=0;} st.lastDate=today;} st.started=true; localStorage.setItem(LOGIN_KEY,JSON.stringify(st)); renderLoginReward(); }
 function claimLoginReward(){let st;try{st=JSON.parse(localStorage.getItem(LOGIN_KEY)||"null");}catch(_){return;} if(!st||st.completed||st.claimedDay!==st.day)return; const rewards=[25,40,60,80,100,150]; if(st.day<7){totalCoins+=rewards[st.day-1]; localStorage.setItem(COINS_KEY,totalCoins); st.claimedDay=st.day; localStorage.setItem(LOGIN_KEY,JSON.stringify(st)); syncCoinUi(); renderLoginReward(); beep(1020,.1,"triangle");}else{ if(!unlockedSkins.includes("aurora")) unlockedSkins.push("aurora"); localStorage.setItem(SKINS_KEY,JSON.stringify(unlockedSkins)); selectedSkin="aurora"; localStorage.setItem(SELECTED_SKIN_KEY,selectedSkin); st.claimedDay=7;st.completed=true;localStorage.setItem(LOGIN_KEY,JSON.stringify(st));syncSkins();renderLoginReward();beep(1280,.16,"triangle");document.getElementById("loginRewardMessage").textContent="🎉 Aurora Legend unlocked! This reward track is complete."; }}
 function setMissionTab(tab){activeMissionTab=tab;document.querySelectorAll(".mission-tab").forEach(b=>b.classList.toggle("active",b.dataset.missionTab===tab));renderMissionList();}
-function renderMissions(){processLoginReward();renderMissionList();}
+function renderMissions(){processLoginReward();renderMissionList();syncMissionBadge();}
 
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(screen => screen.classList.add("hidden"));
