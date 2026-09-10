@@ -24,8 +24,8 @@
       <div class="menu-grid">
         <button class="menu-card" data-screen="howScreen" type="button"><strong>🎮</strong><span>How to Play</span><small>Learn the controls</small></button>
         <button class="menu-card" data-screen="leaderboardScreen" type="button"><strong>🏆</strong><span>Leaderboard</span><small>Top pilots on this device</small></button>
-        <button class="menu-card" data-screen="skinsScreen" type="button"><strong>🚀</strong><span>Skins</span><small>Coming soon</small></button>
-        <button class="menu-card" data-screen="missionsScreen" type="button"><strong>🎯</strong><span>Missions</span><small>Coming soon</small></button>
+        <button class="menu-card" data-screen="skinsScreen" type="button"><strong>🚀</strong><span>Skins</span><small>Customize your ship</small></button>
+        <button class="menu-card" data-screen="missionsScreen" type="button"><strong>🎯</strong><span>Missions</span><small>Goals & rewards</small></button>
         <button class="menu-card settings-card" data-screen="settingsScreen" type="button"><strong>⚙️</strong><span>Settings</span><small>Sound & display</small></button>
       </div>
       <div class="legal-links"><a href="privacy.html">Privacy Policy</a><span>•</span><a href="terms.html">Terms &amp; Conditions</a></div>
@@ -54,7 +54,24 @@
     </section>
 
     <section id="skinsScreen" class="screen info-screen hidden"><button class="back-btn" data-screen="homeScreen" type="button">← HOME</button><div class="info-panel skins-panel"><div class="big-icon">🚀</div><h2>SHIP SKINS</h2><p class="muted">Unlock a ship, then tap it again to equip it.</p><div class="coin-bank">🪙 <b id="skinsCoinBalance">0</b> COINS</div><p id="skinsMessage" class="small-note" aria-live="polite">Choose your flight style.</p><div class="skins-grid"><button class="skin-card" data-skin="sky" type="button"><span class="ship-preview sky-ship">▲</span><b>SKY RUNNER</b><small data-skin-status>FREE</small></button><button class="skin-card" data-skin="rose" type="button"><span class="ship-preview rose-ship">▲</span><b>NEBULA ROSE</b><small data-skin-status>75 COINS</small></button><button class="skin-card" data-skin="gold" type="button"><span class="ship-preview gold-ship">▲</span><b>SOLAR STRIKE</b><small data-skin-status>200 COINS</small></button><button class="skin-card" data-skin="phantom" type="button"><span class="ship-preview phantom-ship">▲</span><b>VOID PHANTOM</b><small data-skin-status>325 COINS</small></button><button class="skin-card" data-skin="toxic" type="button"><span class="ship-preview toxic-ship">▲</span><b>TOXIC NOVA</b><small data-skin-status>500 COINS</small></button><button class="skin-card" data-skin="arctic" type="button"><span class="ship-preview arctic-ship">▲</span><b>ARCTIC PULSE</b><small data-skin-status>750 COINS</small></button><button class="skin-card" data-skin="violet" type="button"><span class="ship-preview violet-ship">▲</span><b>VIOLET VIPER</b><small data-skin-status>1000 COINS</small></button><button class="skin-card" data-skin="crimson" type="button"><span class="ship-preview crimson-ship">▲</span><b>CRIMSON COMET</b><small data-skin-status>1500 COINS</small></button></div></div></section>
-    <section id="missionsScreen" class="screen info-screen hidden"><button class="back-btn" data-screen="homeScreen" type="button">← HOME</button><div class="info-panel"><div class="big-icon">🎯</div><h2>MISSIONS</h2><p class="muted">Daily and achievement missions are planned for a later update.</p><div class="coming">COMING SOON</div></div></section>
+    <section id="missionsScreen" class="screen info-screen hidden">
+      <button class="back-btn" data-screen="homeScreen" type="button">← HOME</button>
+      <div class="info-panel missions-panel">
+        <div class="big-icon">🎯</div><h2>MISSIONS</h2>
+        <p class="muted">Complete goals, claim coins, and unlock special rewards.</p>
+        <div class="login-reward">
+          <div class="login-head"><div><b>🎁 7-DAY LOGIN REWARD</b><small id="loginRewardStatus">Login today to start your streak.</small></div><span id="loginDayBadge">DAY 1/7</span></div>
+          <div class="login-days" id="loginDays"></div>
+          <div class="login-footer"><span id="loginRewardMessage">One-time reward track • Miss a day and the streak resets.</span><button id="claimLoginBtn" class="claim-btn" type="button">CLAIM</button></div>
+        </div>
+        <div class="mission-tabs" role="tablist" aria-label="Mission categories">
+          <button class="mission-tab active" data-mission-tab="daily" type="button">DAILY <b id="dailyCount">0/3</b></button>
+          <button class="mission-tab" data-mission-tab="weekly" type="button">WEEKLY <b id="weeklyCount">0/3</b></button>
+          <button class="mission-tab" data-mission-tab="achievements" type="button">ACHIEVEMENTS</button>
+        </div>
+        <div id="missionList" class="mission-list"></div>
+      </div>
+    </section>
 
     <section id="settingsScreen" class="screen info-screen hidden">
       <button class="back-btn" data-screen="homeScreen" type="button">← HOME</button>

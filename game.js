@@ -20,6 +20,8 @@ const SOUND_KEY = "spaceDodgeSound";
 const COINS_KEY = "spaceDodgeCoins";
 const SKINS_KEY = "spaceDodgeUnlockedSkins";
 const SELECTED_SKIN_KEY = "spaceDodgeSelectedSkin";
+const MISSIONS_KEY = "spaceDodgeMissions";
+const LOGIN_KEY = "spaceDodgeLoginReward";
 const SKINS = {
   sky: { name: "Sky Runner", cost: 0, body: "#1d9ac5", cockpit: "#d9fbff", wing: "#0b4f78", flame: "#ff9257" },
   rose: { name: "Nebula Rose", cost: 75, body: "#d73d7b", cockpit: "#ffe0ef", wing: "#721d52", flame: "#a98bff" },
@@ -28,7 +30,8 @@ const SKINS = {
   toxic: { name: "Toxic Nova", cost: 500, body: "#51be4a", cockpit: "#e4ffd0", wing: "#1d6127", flame: "#aaff54" },
   arctic: { name: "Arctic Pulse", cost: 750, body: "#74cce8", cockpit: "#f2ffff", wing: "#276b91", flame: "#e7ffff" },
   violet: { name: "Violet Viper", cost: 1000, body: "#a248c8", cockpit: "#ffe5ff", wing: "#54156c", flame: "#e29aff" },
-  crimson: { name: "Crimson Comet", cost: 1500, body: "#dc383d", cockpit: "#ffe1df", wing: "#76131b", flame: "#ff9b47" }
+  crimson: { name: "Crimson Comet", cost: 1500, body: "#dc383d", cockpit: "#ffe1df", wing: "#76131b", flame: "#ff9b47" },
+  aurora: { name: "Aurora Legend", cost: Infinity, body: "#56d6b5", cockpit: "#eaffff", wing: "#286d70", flame: "#b9fff1" }
 };
 const keys = { left: false, right: false };
 let gameState = "ready", lastTime = 0, spawnTimer = 0, powerupTimer = 5, coinTimer = 1.2, elapsedTime = 0;
@@ -76,6 +79,46 @@ function recordScore() {
   localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(board.slice(0, 10)));
   renderLeaderboard();
 }
+
+const DAILY_MISSIONS = [
+  { id: "daily_play", icon: "🚀", name: "FIRST FLIGHT", desc: "Complete 1 game", type: "games", target: 1, reward: 25 },
+  { id: "daily_survive", icon: "⭐", name: "SURVIVOR", desc: "Survive for 60 seconds in one run", type: "survival", target: 60, reward: 50 },
+  { id: "daily_coins", icon: "💰", name: "COIN HUNTER", desc: "Collect 50 coins", type: "coins", target: 50, reward: 75 }
+];
+const WEEKLY_MISSIONS = [
+  { id: "weekly_score", icon: "🔥", name: "HIGH FLYER", desc: "Reach 5,000 total score", type: "score", target: 5000, reward: 150 },
+  { id: "weekly_dodge", icon: "🛡️", name: "DODGE MASTER", desc: "Use Dodge 20 times", type: "dodges", target: 20, reward: 125 },
+  { id: "weekly_coins", icon: "💎", name: "TREASURE PILOT", desc: "Collect 250 coins", type: "coins", target: 250, reward: 200 }
+];
+const ACHIEVEMENTS = [
+  { id: "ach_first", icon: "🎮", name: "ROOKIE PILOT", desc: "Complete your first game", type: "games", target: 1, reward: 50 },
+  { id: "ach_score", icon: "🏆", name: "SCORE MASTER", desc: "Reach 10,000 total score", type: "score", target: 10000, reward: 250 },
+  { id: "ach_coins", icon: "🪙", name: "COIN COLLECTOR", desc: "Collect 1,000 coins", type: "coins", target: 1000, reward: 300 },
+  { id: "ach_dodge", icon: "⚡", name: "ESCAPE ARTIST", desc: "Use Dodge 100 times", type: "dodges", target: 100, reward: 350 }
+];
+const MISSION_SETS = { daily: DAILY_MISSIONS, weekly: WEEKLY_MISSIONS, achievements: ACHIEVEMENTS };
+let activeMissionTab = "daily";
+
+function dateKey(date = new Date()) { const y = date.getFullYear(), m = String(date.getMonth()+1).padStart(2,"0"), d = String(date.getDate()).padStart(2,"0"); return `${y}-${m}-${d}`; }
+function weekKey(date = new Date()) { const day = date.getDay() || 7; const monday = new Date(date); monday.setHours(0,0,0,0); monday.setDate(monday.getDate() - day + 1); return dateKey(monday); }
+function dayDiff(a, b) { const x = new Date(a + "T00:00:00"), y = new Date(b + "T00:00:00"); return Math.round((y-x)/86400000); }
+function defaultMissionState() { return { dailyKey: dateKey(), weeklyKey: weekKey(), stats: { games: 0, score: 0, coins: 0, dodges: 0, bestSurvival: 0 }, claimed: {} }; }
+function getMissionState() { try { const saved = JSON.parse(localStorage.getItem(MISSIONS_KEY) || "null"); return saved && saved.stats ? saved : defaultMissionState(); } catch (_) { return defaultMissionState(); } }
+let missionState = getMissionState();
+function saveMissionState() { localStorage.setItem(MISSIONS_KEY, JSON.stringify(missionState)); }
+function resetMissionPeriodIfNeeded() { const today=dateKey(), week=weekKey(); if (missionState.dailyKey !== today) { missionState.dailyKey=today; DAILY_MISSIONS.forEach(m=>delete missionState.claimed[m.id]); } if (missionState.weeklyKey !== week) { missionState.weeklyKey=week; WEEKLY_MISSIONS.forEach(m=>delete missionState.claimed[m.id]); } saveMissionState(); }
+function missionProgress(m) { if (m.type === "survival") return Math.min(missionState.stats.bestSurvival, m.target); return Math.min(Number(missionState.stats[m.type] || 0), m.target); }
+function missionDone(m) { return missionProgress(m) >= m.target; }
+function claimMission(id) { const all=[...DAILY_MISSIONS,...WEEKLY_MISSIONS,...ACHIEVEMENTS], m=all.find(x=>x.id===id); if(!m || !missionDone(m) || missionState.claimed[id]) return; missionState.claimed[id]=true; totalCoins += m.reward; localStorage.setItem(COINS_KEY,totalCoins); saveMissionState(); syncCoinUi(); renderMissions(); beep(1040,.12,"triangle"); }
+function updateMissionStat(type, amount=1) { missionState.stats[type]=(missionState.stats[type]||0)+amount; saveMissionState(); }
+function updateBestSurvival(seconds) { if(seconds>missionState.stats.bestSurvival){missionState.stats.bestSurvival=seconds;saveMissionState();} }
+function renderMissionList() { resetMissionPeriodIfNeeded(); const list=document.getElementById("missionList"), set=MISSION_SETS[activeMissionTab]; list.replaceChildren(); let done=0; set.forEach(m=>{ const p=missionProgress(m), claimed=!!missionState.claimed[m.id], complete=p>=m.target; if(complete) done++; const card=document.createElement("div"); card.className=`mission-card ${complete?"complete":""} ${claimed?"claimed":""}`; const pct=Math.min(100,(p/m.target)*100); card.innerHTML=`<div class="mission-main"><span class="mission-icon">${m.icon}</span><div class="mission-copy"><b>${m.name}</b><small>${m.desc}</small><div class="mission-progress"><i style="width:${pct}%"></i></div><span class="mission-numbers">${m.type==="survival"?Math.floor(p):Math.floor(p)} / ${m.target}</span></div><div class="mission-reward">+${m.reward} 🪙</div></div><div class="mission-action">${claimed?"✓ CLAIMED":complete?`<button class="claim-btn" data-claim-mission="${m.id}" type="button">CLAIM</button>`:`<span>${Math.floor(p)}/${m.target}</span>`}</div>`; list.append(card); }); if(activeMissionTab!=="achievements") document.getElementById(activeMissionTab+"Count").textContent=`${done}/${set.length}`; list.querySelectorAll("[data-claim-mission]").forEach(btn=>btn.addEventListener("click",()=>claimMission(btn.dataset.claimMission))); }
+function renderLoginReward() { const el=document.getElementById("loginDays"), badge=document.getElementById("loginDayBadge"), status=document.getElementById("loginRewardStatus"), msg=document.getElementById("loginRewardMessage"), btn=document.getElementById("claimLoginBtn"); if(!el)return; let st; try{st=JSON.parse(localStorage.getItem(LOGIN_KEY)||"null");}catch(_){st=null;} if(!st) st={started:false,day:0,lastDate:null,claimedDay:0,completed:false}; const rewards=[25,40,60,80,100,150,"SKIN"]; el.replaceChildren(); for(let i=1;i<=7;i++){const d=document.createElement("div"); const state=st.completed&&i===7?"done":i<st.day?"done":i===st.day?"today":"locked"; d.className=`login-day ${state}`; d.innerHTML=`<span>DAY ${i}</span><b>${i===7?"🚀":`+${rewards[i-1]} 🪙`}</b>`; el.append(d);} badge.textContent=st.completed?"COMPLETE":"DAY "+Math.max(1,st.day)+"/7"; status.textContent=st.completed?"7-day reward already completed.":`Day ${Math.max(1,st.day)} reward is ready.`; msg.textContent=st.completed?"One-time reward track complete • Aurora Legend unlocked.":"Miss one calendar day and the login streak resets to Day 1."; btn.disabled=st.completed||st.claimedDay!==st.day||st.day<1; btn.textContent=st.completed?"DONE":st.claimedDay===st.day?"CLAIM":"CLAIMED"; }
+function processLoginReward() { let st; try{st=JSON.parse(localStorage.getItem(LOGIN_KEY)||"null");}catch(_){st=null;} const today=dateKey(); if(!st){st={started:true,day:1,lastDate:today,claimedDay:0,completed:false};} else if(!st.completed && st.lastDate!==today){const gap=dayDiff(st.lastDate,today); if(gap===1){st.day=Math.min(7,st.day+1);} else if(gap>1){st.day=1;st.claimedDay=0;} st.lastDate=today;} st.started=true; localStorage.setItem(LOGIN_KEY,JSON.stringify(st)); renderLoginReward(); }
+function claimLoginReward(){let st;try{st=JSON.parse(localStorage.getItem(LOGIN_KEY)||"null");}catch(_){return;} if(!st||st.completed||st.claimedDay!==st.day)return; const rewards=[25,40,60,80,100,150]; if(st.day<7){totalCoins+=rewards[st.day-1]; localStorage.setItem(COINS_KEY,totalCoins); st.claimedDay=st.day; localStorage.setItem(LOGIN_KEY,JSON.stringify(st)); syncCoinUi(); renderLoginReward(); beep(1020,.1,"triangle");}else{ if(!unlockedSkins.includes("aurora")) unlockedSkins.push("aurora"); localStorage.setItem(SKINS_KEY,JSON.stringify(unlockedSkins)); selectedSkin="aurora"; localStorage.setItem(SELECTED_SKIN_KEY,selectedSkin); st.claimedDay=7;st.completed=true;localStorage.setItem(LOGIN_KEY,JSON.stringify(st));syncSkins();renderLoginReward();beep(1280,.16,"triangle");document.getElementById("loginRewardMessage").textContent="🎉 Aurora Legend unlocked! This reward track is complete."; }}
+function setMissionTab(tab){activeMissionTab=tab;document.querySelectorAll(".mission-tab").forEach(b=>b.classList.toggle("active",b.dataset.missionTab===tab));renderMissionList();}
+function renderMissions(){processLoginReward();renderMissionList();}
+
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(screen => screen.classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
@@ -83,6 +126,7 @@ function showScreen(id) {
   if (id === "leaderboardScreen") renderLeaderboard();
   if (id === "settingsScreen") syncSoundButtons();
   if (id === "skinsScreen") { syncCoinUi(); syncSkins(); }
+  if (id === "missionsScreen") renderMissions();
 }
 function syncSoundButtons() {
   document.getElementById("homeSoundBtn").textContent = soundOn ? "🔊" : "🔇";
@@ -153,12 +197,12 @@ function checkCollisions() {
   for (let i = coins.length - 1; i >= 0; i--) {
     const coin = coins[i], box = { x: coin.x - coin.size, y: coin.y - coin.size, width: coin.size * 2, height: coin.size * 2 };
     if (!overlap(player, box)) continue;
-    runCoins++; totalCoins++; localStorage.setItem(COINS_KEY, totalCoins); score += 15;
+    runCoins++; totalCoins++; updateMissionStat("coins", 1); localStorage.setItem(COINS_KEY, totalCoins); score += 15;
     burst(coin.x, coin.y, 10, "#ffe16b"); coins.splice(i, 1); beep(1080, .06, "triangle"); syncCoinUi();
   }
 }
-function dodge() { if (gameState !== "playing" || dodgeCooldown) return; dodgeCooldown = 3.2; dodgeTime = .55; invulnerable = .6; const direction = keys.left ? -1 : keys.right ? 1 : (Math.random() < .5 ? -1 : 1); player.x = Math.max(0, Math.min(canvas.width - player.width, player.x + direction * 105)); burst(player.x + player.width / 2, player.y + player.height, 16, "#9c7cff"); beep(720, .09, "triangle"); }
-function gameOver() { gameState = "gameover"; const finalScore = Math.floor(score); if (finalScore > highScore) { highScore = finalScore; localStorage.setItem("spaceDodgeHighScore", highScore); } recordScore(); beep(90, .25, "sawtooth"); updateHud(); draw(); }
+function dodge() { if (gameState !== "playing" || dodgeCooldown) return; updateMissionStat("dodges", 1); dodgeCooldown = 3.2; dodgeTime = .55; invulnerable = .6; const direction = keys.left ? -1 : keys.right ? 1 : (Math.random() < .5 ? -1 : 1); player.x = Math.max(0, Math.min(canvas.width - player.width, player.x + direction * 105)); burst(player.x + player.width / 2, player.y + player.height, 16, "#9c7cff"); beep(720, .09, "triangle"); }
+function gameOver() { gameState = "gameover"; const finalScore = Math.floor(score); updateMissionStat("games", 1); updateMissionStat("score", finalScore); updateBestSurvival(elapsedTime); if (finalScore > highScore) { highScore = finalScore; localStorage.setItem("spaceDodgeHighScore", highScore); } recordScore(); beep(90, .25, "sawtooth"); updateHud(); draw(); }
 function togglePause() { if (gameState === "playing") { gameState = "paused"; pauseBtn.textContent = "RESUME"; draw(); } else if (gameState === "paused") { gameState = "playing"; pauseBtn.textContent = "PAUSE"; lastTime = performance.now(); requestAnimationFrame(gameLoop); } }
 
 function draw() {
@@ -193,4 +237,6 @@ document.addEventListener("keyup", event => { const key = event.key.toLowerCase(
 canvas.addEventListener("pointermove", event => { if (gameState !== "playing" || event.pointerType === "touch") return; const rect = canvas.getBoundingClientRect(), pointerX = (event.clientX - rect.left) * canvas.width / rect.width; player.x = Math.max(0, Math.min(canvas.width - player.width, pointerX - player.width / 2)); });
 canvas.addEventListener("click", () => { if (gameState === "ready" || gameState === "gameover") startGame(); }); startBtn.addEventListener("click", startGame); pauseBtn.addEventListener("click", () => { if (gameState !== "ready" && gameState !== "gameover") togglePause(); }); soundToggle.addEventListener("click", () => setSound(!soundOn)); document.getElementById("homeSoundBtn").addEventListener("click", () => setSound(!soundOn)); document.getElementById("settingsSoundBtn").addEventListener("click", () => setSound(!soundOn)); document.getElementById("fullscreenBtn").addEventListener("click", async () => { try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); } catch (_) {} }); document.addEventListener("fullscreenchange", () => document.getElementById("fullscreenBtn").textContent = document.fullscreenElement ? "EXIT" : "OPEN"); document.getElementById("homeBtn").addEventListener("click", () => { gameState = "ready"; keys.left = keys.right = false; showScreen("homeScreen"); }); document.getElementById("playBtn").addEventListener("click", startGame); document.getElementById("saveNameBtn").addEventListener("click", saveName); nameInput.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); saveName(); } }); document.querySelectorAll("[data-screen]").forEach(button => button.addEventListener("click", () => showScreen(button.dataset.screen))); window.addEventListener("blur", () => { keys.left = keys.right = false; if (gameState === "playing") togglePause(); });
 document.querySelectorAll("[data-skin]").forEach(card => card.addEventListener("click", () => chooseSkin(card.dataset.skin)));
-syncSoundButtons(); syncCoinUi(); syncSkins(); renderLeaderboard(); showScreen("homeScreen"); updateHud(); draw();
+document.querySelectorAll("[data-mission-tab]").forEach(button => button.addEventListener("click", () => setMissionTab(button.dataset.missionTab)));
+document.getElementById("claimLoginBtn").addEventListener("click", claimLoginReward);
+processLoginReward(); syncSoundButtons(); syncCoinUi(); syncSkins(); renderLeaderboard(); showScreen("homeScreen"); updateHud(); draw();
